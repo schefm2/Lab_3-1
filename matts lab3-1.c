@@ -11,7 +11,7 @@ void XBR0_Init();
 void Steering_Servo(void);
 void Run_Adjustments(void);
 void PCA_ISR ( void ) __interrupt 9;
-unsigned int PW_CENTER = 0;			//Will eventually be set to a different value
+unsigned int PW_CENTER = 2765;			//Will eventually be set to a different value
 unsigned int PW_LEFT = 1659;		//Initialized to .9 ms
 unsigned int PW_RIGHT = 3871;		//Initialized to 2.1 ms
 unsigned int SERVO_PW = 2765;		//Initialized to 1.5 ms
@@ -58,7 +58,7 @@ void Port_Init()
 //
 void XBR0_Init()
 {
-	XBR0 = 0x27 ;	//configure crossbar with UART, SPI, SMBus, and CEX channels as
+	XBR0 = 0x27;	//configure crossbar with UART, SPI, SMBus, and CEX channels as
 					//in worksheet
 }
 
@@ -71,9 +71,9 @@ void XBR0_Init()
 //
 void PCA_Init(void)
 {
-	PCA0MD = 0x89;		//Enable CF Interrupt
-	PCA0CPM0 = 0xC2;	//CCM0 in 16-bit compare mode
-	PCA0CN = 0x40;		//Enables PCA counter
+	PCA0MD = 0x81;		//Enable CF Interrupt, uses SYSCLK/12, 
+	PCA0CPM0 = 0xC2;	//CCM0 in 16-bit compare mode,enables PWM
+	PCA0CN |= 0x40;		//Enables PCA counter
 	EIE1 |= 0x08;		//Enable PCA interrupt
 	EA = 1;				//Enable global interrupt	
 }
@@ -120,8 +120,11 @@ void Steering_Servo()
 		breaker = 1;
 	}
 	printf("SERVO_PW: %u\r\n", SERVO_PW);
+	PCA0CP0 = 0xFFFF - SERVO_PW;
+	/*
 	PCA0CPL0 = 0xFFFF - SERVO_PW;
 	PCA0CPH0 = (0xFFFF - SERVO_PW) >> 8;
+	*/
 }
 //-----------------------------------------------------------------------------
 // Run_Adjustments
