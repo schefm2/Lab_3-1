@@ -1,0 +1,103 @@
+compiler directives
+	#include <c8051_SDCC.h>
+	#include <stdio.h>
+
+declare global variables
+	char input;
+	unsigned char breaker;
+	unsigned int PW_CENTER = 2765;
+	unsigned int PW_LEFT = 1659;
+	unsigned int PW_RIGHT = 3871;
+	unsigned int SERVO_PW = 2765;
+	
+function prototypes
+	void Port_Init(void);
+	void PCA_Init (void);
+	void XBR0_Init();
+	void Steering_Servo(void);
+	void Run_Adjustments(void);
+	void PCA_ISR ( void ) __interrupt 9;
+
+main function
+	declare local variables
+		(NONE)
+	initialization functions
+		Sys_Init();
+		putchar(' ');
+		Port_Init();
+		XBR0_Init();
+		PCA_Init();
+
+		Print title
+		Set SERVO_PW
+		Begin infinite loop
+			Run_Adjustments();
+		End infinite loop
+End main function
+		
+Functions
+	Port_Init
+		Set P1.0 to push-pull
+	End Port_Init
+	
+	XBR0_Init
+		Configure crossbar to use UART0, SPI, SMBus, and up to CEX3
+	End XBR0_Init
+	
+	PCA_Init
+		Enable CF interrupt and SYSCLK/12 on PCA0
+		Put CCM0 in 16-bit compare mode, enable PWM on PCA0CPM0
+		Enable PCA0 counter with PCA0CN
+		Enable PCA interrupt in EIE1
+		Enable global interrupt with EA
+	End PCA_Init
+	
+	PCA_ISR
+		if CF flag is raised
+			Lower CF flag
+			Set PCA0 starting value for 20 ms pulses
+		Handle other PCA0 interrupt sources with PCA0CN
+	End PCA_ISR
+	
+	Steering_Servo
+		Redeclare input
+		Assign getchar() to input
+		if input == 'r'
+			if SERVO_PW < PW_RIGHT
+				Increment 10 SERVO_PW
+		else if input == 'l'
+			if SERVO_PW > PW_LEFT
+				Decrement 10 SERVO_PW
+		else if input == 'q'
+			Set breaker high
+		Print SERVO_PW
+		Set pulse width using SERVO_PW and PCA0CP0
+	End Steering_Servo
+	
+	Run_Adjustments
+		Print instructions to center steering
+		Set breaker low
+		while breaker is low
+			Steering_Servo();
+		Set breaker low
+		Set PW_CENTER equal to SERVO_PW
+		
+		Print instructions to find leftmost steering
+		Set breaker low
+		while breaker is low
+			Steering_Servo();
+		Set breaker low		
+		Set PW_LEFT to SERVO_PW
+		
+		Print instructions to find rightmost steering
+		Set breaker low
+		while breaker is low
+			Steering_Servo();
+		Set breaker low		
+		Set PW_RIGHT to SERVO_PW		
+		
+		Print instructions for free steering adjustment
+		Begin infinite loop
+			Steering_Servo();
+		End infinite loop
+	End Run_Adjustments
