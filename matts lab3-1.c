@@ -102,7 +102,7 @@ void PCA_ISR(void) __interrupt 9
 // will eventually be set to by manual adjustment of SERVO_PW.
 void Steering_Servo()
 {
-	char input;
+	//char input;
 	//wait for a key to be pressed
 	input = getchar();
 	if(input == 'r') //if 'r' is pressed by the user
