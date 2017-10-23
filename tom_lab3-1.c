@@ -14,9 +14,9 @@ void PCA_ISR ( void ) __interrupt 9;
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
-unsigned int NEUTRAL_PW = 2150; //1.5 ms
-unsigned int BACKWARD_PW_MAX = 1577; //1.1 ms
-unsigned int FORWARD_PW_MAX = 2724; //1.9 ms
+unsigned int NEUTRAL_PW = 2765; //1.5 ms
+unsigned int BACKWARD_PW_MAX = 2027; //1.1 ms
+unsigned int FORWARD_PW_MAX = 3502; //1.9 ms
 unsigned int PW = 0;
 unsigned char PW_INCREMENT = 10;
 
@@ -38,10 +38,19 @@ void main(void)
     PCA_Init();
 
     //print beginning message
-    printf("Embedded Control sspeeeEEEEEEEEEEEEEEEEEEEEd\r\n");
+    printf("Embedded Control Speed\r\n");
     // set the PCA output to a neutral setting
+	
+	NEUTRAL_PW = 2765; //1.5 ms
+	BACKWARD_PW_MAX = 2027; //1.1 ms
+	FORWARD_PW_MAX = 3502; //1.9 ms
+	PW_INCREMENT = 10;
+
     PW = NEUTRAL_PW;
+	PCA0CP2 = 0xFFFF - PW;
+
     printf("Initializing...\r\n");
+	init_ticks = 0;
     while ( init_ticks <= init_time ) { ; } //wait for speed controller to initialize
     printf("Ready!\r\n");
     while(1)
@@ -98,7 +107,9 @@ void PCA_Init(void)
     EIE1 |= 0x08; //enable PCA0 interrupt
 
     //PCA_start = 28671; //start point so period is 20 ms
-    PCA0CN |= 0x40; //enable timer
+    PCA0CN = 0x40; //enable timer
+
+	PCA0CP2 = 0xFFFF - NEUTRAL_PW; //init
 }
 
 //-----------------------------------------------------------------------------
