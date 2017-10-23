@@ -20,6 +20,9 @@ unsigned int FORWARD_PW_MAX = 2724; //1.9 ms
 unsigned int PW = 0;
 unsigned char PW_INCREMENT = 10;
 
+unsigned char init_time = 50; //50 * 20 ms about = 1 s
+unsigned char init_ticks = 0;
+
 //Period: 20 ms. PW: init 1.5 ms.
 
 //-----------------------------------------------------------------------------
@@ -38,8 +41,13 @@ void main(void)
     printf("Embedded Control sspeeeEEEEEEEEEEEEEEEEEEEEd\r\n");
     // set the PCA output to a neutral setting
     PW = NEUTRAL_PW;
+    printf("Initializing...\r\n");
+    while ( init_ticks <= init_time ) { ; } //wait for speed controller to initialize
+    printf("Ready!\r\n");
     while(1)
+    {
         Set_Pulsewidth();
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -90,7 +98,7 @@ void PCA_Init(void)
     EIE1 |= 0x08; //enable PCA0 interrupt
 
     //PCA_start = 28671; //start point so period is 20 ms
-    PCA0CN |= ~0x40; //enable timer
+    PCA0CN |= 0x40; //enable timer
 }
 
 //-----------------------------------------------------------------------------
@@ -107,12 +115,17 @@ void PCA_ISR ( void ) __interrupt 9
     if (CF)
     {
         CF = 0; //reset interrupt flag
+        /*
         PCA0H = 0x6F;
         PCA0L = 0xFF;
+        */
+        PCA0 = 28671;
         //28671 split in high and low bits - makes 20 ms period.
     }
     PCA0CN &= 0x40; //clear CF bit, clear CCF bits 0-4.
-    PCA0CN |= ~0x40; //enable timer
+    //PCA0CN |= 0x40; //enable timer
+
+    ++init_ticks; //speed controller needs to get ready.
 }
 
 void Set_Pulsewidth()
@@ -158,6 +171,6 @@ void Set_Pulsewidth()
         }
     }
     printf("PW: %u\r\n", PW);
-    PCA0CP1 = 0xFFFF - PW;
+    PCA0CP2 = 0xFFFF - PW;
 
 }
